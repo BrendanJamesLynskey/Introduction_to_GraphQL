@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Introduction to GraphQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/theme/black.min.css">
+<style>
+  :root {
+    --amber:  #f5a623;
+    --green:  #4ecb8d;
+    --purple: #a78bfa;
+    --blue:   #60a5fa;
+    --red:    #f87171;
+    --bg:     #0a0a0f;
+    --bg2:    #10101a;
+    --bg3:    #181824;
+    --border: #2a2a3a;
+    --text:   #e8e8f0;
+    --muted:  #8888a8;
+  }
+
+  .reveal-viewport { background: var(--bg); }
+  .reveal .slides section { background: transparent; }
+
+  .reveal { font-family: 'DM Sans', sans-serif; color: var(--text); }
+  .reveal h1, .reveal h2, .reveal h3 { font-family: 'Playfair Display', serif; font-weight: 700; }
+  .reveal h1 { font-size: 1.6em; color: var(--amber); line-height: 1.1; }
+  .reveal h2 { font-size: 1.1em; color: var(--amber); margin-bottom: .2em; }
+  .reveal h3 { font-size: .78em; color: var(--green); margin-bottom: .15em; }
+  .reveal p  { font-size: .56em; line-height: 1.45; color: var(--text); }
+  .reveal li { font-size: .54em; line-height: 1.45; margin-bottom: .1em; }
+  .reveal code { font-family: 'JetBrains Mono', monospace; font-size: .72em; }
+  .reveal pre  { box-shadow: none; background: var(--bg3); border: 1px solid var(--border);
+                 border-radius: 6px; padding: .3em .5em; margin: .25em 0; }
+  .reveal pre code { font-size: .52em; line-height: 1.35; background: transparent; color: #cdd6f4; }
+
+  /* ── slide chrome ── */
+  .slide-hdr {
+    display: flex; align-items: center; gap: .4em;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: .2em; margin-bottom: .3em;
+  }
+  .slide-hdr .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .42em; font-weight: 500;
+    color: var(--bg); background: var(--amber);
+    padding: .1em .4em; border-radius: 3px;
+    letter-spacing: .04em;
+  }
+  .slide-hdr h2 { margin: 0; font-size: .95em; }
+
+  /* ── two-column ── */
+  .cols   { display: grid; gap: .5em; }
+  .cols-2 { grid-template-columns: 1fr 1fr; }
+  .cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .cols-6040 { grid-template-columns: 6fr 4fr; }
+  .cols-4060 { grid-template-columns: 4fr 6fr; }
+
+  /* ── cards ── */
+  .card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 6px; padding: .35em .6em;
+  }
+  .card.amber { border-left: 3px solid var(--amber); }
+  .card.green { border-left: 3px solid var(--green); }
+  .card.purple{ border-left: 3px solid var(--purple); }
+  .card.blue  { border-left: 3px solid var(--blue); }
+  .card.red   { border-left: 3px solid var(--red); }
+  .card h3 { font-size: .64em; margin: 0 0 .12em; }
+  .card p  { font-size: .52em; margin: 0; color: #b8b8d0; }
+  .card ul { margin: 0; padding-left: 1em; }
+  .card li { font-size: .52em; color: #b8b8d0; margin-bottom: .02em; }
+
+  /* ── table ── */
+  .reveal table { width: 100%; border-collapse: collapse; font-size: .5em; }
+  .reveal table th { background: var(--bg3); color: var(--amber); font-weight: 600;
+                     padding: .2em .4em; border: 1px solid var(--border); text-align: left; }
+  .reveal table td { padding: .18em .4em; border: 1px solid var(--border); color: #ccc; }
+  .reveal table tr:nth-child(even) td { background: #0e0e18; }
+
+  /* ── accent spans ── */
+  .a  { color: var(--amber); font-weight: 600; }
+  .g  { color: var(--green); font-weight: 600; }
+  .p  { color: var(--purple); font-weight: 600; }
+  .b  { color: var(--blue); font-weight: 600; }
+  .r  { color: var(--red); font-weight: 600; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── SVG graph diagrams ── */
+  svg.diagram { display: block; margin: 0 auto; overflow: visible; }
+
+  /* ── pill badges ── */
+  .pill {
+    display: inline-block; font-family: 'JetBrains Mono', monospace;
+    font-size: .44em; padding: .08em .4em; border-radius: 99px;
+    border: 1px solid; margin: 0 .08em;
+  }
+  .pill.amber { color: var(--amber); border-color: var(--amber); }
+  .pill.green { color: var(--green); border-color: var(--green); }
+  .pill.purple{ color: var(--purple); border-color: var(--purple); }
+  .pill.blue  { color: var(--blue); border-color: var(--blue); }
+
+  /* ── footer — hidden ── */
+  .reveal .slide-footer { display: none; }
+  /* title slide special */
+  .title-slide h1 { font-size: 1.8em; }
+  .title-slide .subtitle {
+    font-size: .7em; color: var(--green); font-family: 'DM Sans', sans-serif;
+    font-weight: 300; letter-spacing: .04em; margin: .3em 0 .6em;
+  }
+  .title-slide .meta { font-size: .48em; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+  /* reduce default margins */
+  .reveal ul, .reveal ol { margin: .15em 0 .15em 1em; }
+  .reveal .slides > section { display: flex !important; flex-direction: column !important; overflow-y: auto !important; align-items: stretch !important; justify-content: flex-start !important; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+
+<!-- ═══════════════════════════════ SLIDE 01 — TITLE ═══════════════════════════════ -->
+<section class="title-slide" data-background-color="#0a0a0f">
+  <div style="text-align:left; max-width:820px; margin:0 auto; padding: 1em 0;">
+    <div style="font-family:'JetBrains Mono',monospace; font-size:.5em; color:var(--muted); margin-bottom:.4em; letter-spacing:.1em;">
+      TECHNICAL PRESENTATION
+    </div>
+    <h1>Introduction to<br>GraphQL</h1>
+    <div class="subtitle">A Query Language for Your APIs</div>
+    <div style="width:60px; height:3px; background:var(--amber); margin-bottom:1.4em;"></div>
+    <div class="meta">schema &middot; queries &middot; mutations &middot; subscriptions &middot; resolvers &middot; Apollo</div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 02 — AGENDA ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">02</span><h2>Agenda</h2></div>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3>Foundations</h3>
+      <ul>
+        <li>What is GraphQL &amp; its origin</li>
+        <li>GraphQL vs REST</li>
+        <li>Schema Definition Language (SDL)</li>
+        <li>Queries, Mutations &amp; Subscriptions</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3>Server-Side</h3>
+      <ul>
+        <li>Resolvers &amp; the resolver chain</li>
+        <li>Apollo Server with Express</li>
+        <li>DataLoaders &amp; the N+1 problem</li>
+        <li>Authentication &amp; authorisation</li>
+      </ul>
+    </div>
+    <div class="card purple">
+      <h3>Client-Side</h3>
+      <ul>
+        <li>Apollo Client &amp; React integration</li>
+        <li>Caching &amp; optimistic updates</li>
+        <li>Error handling strategies</li>
+        <li>Pagination patterns</li>
+      </ul>
+    </div>
+    <div class="card blue">
+      <h3>Production</h3>
+      <ul>
+        <li>Schema design patterns</li>
+        <li>Performance &amp; security</li>
+        <li>Testing GraphQL APIs</li>
+        <li>Summary &amp; next steps</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 03 — WHAT IS GRAPHQL ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">03</span><h2>What Is GraphQL?</h2></div>
+  <div class="cols cols-6040">
+    <div>
+      <p>GraphQL is an <span class="a">open-source query language for APIs</span> and a runtime for executing those queries against a type system you define. Created at <span class="g">Facebook in 2012</span>, open-sourced in <span class="g">2015</span>, and now governed by the GraphQL Foundation under the Linux Foundation.</p>
+      <p>Unlike REST, GraphQL exposes a <span class="p">single endpoint</span>. Clients describe exactly the data they need, and the server returns precisely that shape &mdash; nothing more, nothing less.</p>
+      <div class="card amber" style="margin-top:.3em;">
+        <h3>Core Principles</h3>
+        <ul>
+          <li><span class="a">Declarative data fetching</span> &mdash; client specifies the shape</li>
+          <li><span class="g">Strongly typed</span> &mdash; schema defines every field and type</li>
+          <li><span class="p">Single endpoint</span> &mdash; one URL, one POST</li>
+          <li><span class="b">Introspective</span> &mdash; clients can query the schema itself</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+<pre><code class="language-graphql"># Client sends exactly the query it needs
+query {
+  user(id: "42") {
+    name
+    email
+    posts(last: 3) {
+      title
+      createdAt
+    }
+  }
+}</code></pre>
+<pre><code class="language-json">// Server returns exactly that shape
+{
+  "data": {
+    "user": {
+      "name": "Alice",
+      "email": "alice@example.com",
+      "posts": [
+        { "title": "GraphQL 101", "createdAt": "2025-12-01" },
+        { "title": "SDL Deep Dive", "createdAt": "2025-11-15" },
+        { "title": "Resolver Tips", "createdAt": "2025-11-02" }
+      ]
+    }
+  }
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 04 — GRAPHQL VS REST ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">04</span><h2>GraphQL vs REST</h2></div>
+  <table>
+    <thead><tr><th>Aspect</th><th>REST</th><th>GraphQL</th></tr></thead>
+    <tbody>
+      <tr><td><span class="a">Endpoints</span></td><td>Multiple (<code>/users</code>, <code>/users/:id/posts</code>)</td><td>Single (<code>/graphql</code>)</td></tr>
+      <tr><td><span class="g">Data fetching</span></td><td>Server decides response shape</td><td>Client specifies exact fields</td></tr>
+      <tr><td><span class="p">Over-fetching</span></td><td>Common &mdash; returns entire resource</td><td>Eliminated &mdash; request only what you need</td></tr>
+      <tr><td><span class="b">Under-fetching</span></td><td>Requires multiple round-trips</td><td>Single request traverses the graph</td></tr>
+      <tr><td><span class="r">N+1 Requests</span></td><td>Client may chain GET calls</td><td>Resolved server-side with DataLoader</td></tr>
+      <tr><td>Versioning</td><td><code>/api/v1</code>, <code>/api/v2</code></td><td>Schema evolution, deprecation directives</td></tr>
+      <tr><td>Caching</td><td>HTTP caching (ETags, 304)</td><td>Normalised client cache (Apollo, Relay)</td></tr>
+      <tr><td>Contract</td><td>OpenAPI / Swagger (opt-in)</td><td>Schema-first &mdash; always present</td></tr>
+    </tbody>
+  </table>
+  <div class="cols cols-2" style="margin-top:.3em;">
+    <div class="card amber">
+      <h3>When REST Wins</h3>
+      <ul>
+        <li>Simple CRUD with uniform resource shapes</li>
+        <li>Heavy reliance on HTTP caching (CDN edge)</li>
+        <li>File uploads (though GraphQL multipart spec exists)</li>
+        <li>Team unfamiliarity with GraphQL tooling</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3>When GraphQL Wins</h3>
+      <ul>
+        <li>Multiple clients needing different data shapes (web, mobile, IoT)</li>
+        <li>Deeply nested or interconnected data (social graphs)</li>
+        <li>Rapid frontend iteration without backend changes</li>
+        <li>Microservice aggregation via federation</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 05 — SDL ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">05</span><h2>Schema Definition Language (SDL)</h2></div>
+  <p>The schema is the <span class="a">contract</span> between client and server. SDL defines every type, field, argument, and relationship in a human-readable syntax.</p>
+  <div class="cols cols-2">
+    <div>
+<pre><code class="language-graphql"># Scalar types: String, Int, Float, Boolean, ID
+# ! = non-null, [] = list
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  role: Role!
+  posts: [Post!]!
+  createdAt: DateTime!
+}
+
+type Post {
+  id: ID!
+  title: String!
+  body: String!
+  author: User!
+  tags: [String!]!
+  status: PostStatus!
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+scalar DateTime</code></pre>
+    </div>
+    <div>
+<pre><code class="language-graphql"># Input types for mutations
+input CreateUserInput {
+  name: String!
+  email: String!
+  role: Role = VIEWER   # default value
+}
+
+input PostFilterInput {
+  status: PostStatus
+  authorId: ID
+  tag: String
+}
+
+# Root types — entry points
+type Query {
+  user(id: ID!): User
+  users(limit: Int = 10, offset: Int = 0): [User!]!
+  posts(filter: PostFilterInput): [Post!]!
+}
+
+type Mutation {
+  createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: CreateUserInput!): User!
+  deleteUser(id: ID!): Boolean!
+}
+
+type Subscription {
+  postPublished: Post!
+}</code></pre>
+      <div class="card purple" style="margin-top:.3em;">
+        <h3>Non-Null Rules</h3>
+        <ul>
+          <li><code>String</code> &mdash; nullable field, may return <code>null</code></li>
+          <li><code>String!</code> &mdash; never null, server guarantees a value</li>
+          <li><code>[String!]!</code> &mdash; non-null list of non-null strings</li>
+          <li><code>[String]!</code> &mdash; non-null list, but items may be null</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 06 — QUERIES ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">06</span><h2>Queries</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber">
+        <h3>Field Selection &amp; Nesting</h3>
+      </div>
+<pre><code class="language-graphql"># Only request the fields you need
+query {
+  user(id: "42") {
+    name
+    email
+    posts {
+      title
+      tags
+    }
+  }
+}</code></pre>
+      <div class="card green" style="margin-top:.3em;">
+        <h3>Arguments</h3>
+      </div>
+<pre><code class="language-graphql"># Arguments can appear on any field
+query {
+  users(limit: 5, offset: 10) {
+    name
+    posts(status: PUBLISHED) {
+      title
+    }
+  }
+}</code></pre>
+    </div>
+    <div>
+      <div class="card purple">
+        <h3>Aliases</h3>
+        <p>Rename fields to avoid conflicts when querying the same field with different arguments.</p>
+      </div>
+<pre><code class="language-graphql">query {
+  admins: users(role: ADMIN) {
+    name
+  }
+  editors: users(role: EDITOR) {
+    name
+  }
+}</code></pre>
+      <div class="card blue" style="margin-top:.3em;">
+        <h3>Fragments</h3>
+        <p>Reusable field selections &mdash; DRY for repeated structures.</p>
+      </div>
+<pre><code class="language-graphql">fragment UserFields on User {
+  id
+  name
+  email
+  role
+}
+
+query {
+  user(id: "42") { ...UserFields }
+  me { ...UserFields }
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 07 — MUTATIONS ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">07</span><h2>Mutations</h2></div>
+  <p>Mutations are the GraphQL equivalent of POST/PUT/DELETE. They <span class="a">modify server-side data</span> and return a result that the client can query fields from.</p>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber"><h3>Create</h3></div>
+<pre><code class="language-graphql">mutation {
+  createUser(input: {
+    name: "Alice"
+    email: "alice@example.com"
+    role: EDITOR
+  }) {
+    id
+    name
+    createdAt
+  }
+}</code></pre>
+      <div class="card green" style="margin-top:.3em;"><h3>Update</h3></div>
+<pre><code class="language-graphql">mutation {
+  updateUser(id: "42", input: {
+    name: "Alice Smith"
+    email: "alice.smith@example.com"
+  }) {
+    id
+    name
+    email
+  }
+}</code></pre>
+    </div>
+    <div>
+      <div class="card red"><h3>Delete</h3></div>
+<pre><code class="language-graphql">mutation {
+  deleteUser(id: "42")
+}</code></pre>
+      <div class="card purple" style="margin-top:.3em;">
+        <h3>Variables &amp; Operation Names</h3>
+        <p>Production clients always use variables &mdash; never string interpolation.</p>
+      </div>
+<pre><code class="language-graphql">mutation CreateUser($input: CreateUserInput!) {
+  createUser(input: $input) {
+    id
+    name
+  }
+}
+
+# Variables (JSON):
+# { "input": { "name": "Bob", "email": "bob@co.io" } }</code></pre>
+      <div class="card blue" style="margin-top:.3em;">
+        <h3>Mutation Design Tips</h3>
+        <ul>
+          <li>Use <span class="a">input types</span> for complex arguments</li>
+          <li>Return the <span class="g">mutated object</span> so the client cache updates</li>
+          <li>Consider a <span class="p">payload type</span> with <code>errors</code> field for domain errors</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 08 — SUBSCRIPTIONS ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">08</span><h2>Subscriptions</h2></div>
+  <p>Subscriptions provide <span class="a">real-time, push-based updates</span> from server to client. They use a persistent connection (typically <span class="g">WebSocket</span>) instead of request-response.</p>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber"><h3>Schema</h3></div>
+<pre><code class="language-graphql">type Subscription {
+  postPublished: Post!
+  commentAdded(postId: ID!): Comment!
+  userStatusChanged: User!
+}</code></pre>
+      <div class="card green" style="margin-top:.3em;"><h3>Client Usage</h3></div>
+<pre><code class="language-graphql">subscription OnNewPost {
+  postPublished {
+    id
+    title
+    author {
+      name
+    }
+  }
+}</code></pre>
+      <div class="card purple" style="margin-top:.3em;">
+        <h3>Transport Protocols</h3>
+        <ul>
+          <li><span class="a">graphql-ws</span> &mdash; modern protocol (recommended)</li>
+          <li><span class="g">subscriptions-transport-ws</span> &mdash; legacy, deprecated</li>
+          <li><span class="b">Server-Sent Events</span> &mdash; HTTP-based alternative</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card blue"><h3>Server Implementation (Apollo)</h3></div>
+<pre><code class="language-javascript">const { PubSub } = require('graphql-subscriptions');
+const pubsub = new PubSub();
+
+const resolvers = {
+  Mutation: {
+    createPost: async (_, { input }, ctx) =&gt; {
+      const post = await ctx.db.posts.create(input);
+
+      // Publish event to all subscribers
+      pubsub.publish('POST_PUBLISHED', {
+        postPublished: post,
+      });
+
+      return post;
+    },
+  },
+  Subscription: {
+    postPublished: {
+      subscribe: () =&gt;
+        pubsub.asyncIterableIterator(['POST_PUBLISHED']),
+    },
+    commentAdded: {
+      subscribe: (_, { postId }) =&gt;
+        pubsub.asyncIterableIterator([`COMMENT_${postId}`]),
+    },
+  },
+};</code></pre>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 09 — RESOLVERS ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">09</span><h2>Resolvers</h2></div>
+  <p>Resolvers are <span class="a">functions that produce the value for each field</span> in the schema. Every field has a resolver &mdash; if you don't write one, the default resolver reads the property from the parent object.</p>
+  <div class="cols cols-6040">
+    <div>
+<pre><code class="language-javascript">const resolvers = {
+  Query: {
+    // resolver(parent, args, context, info)
+    user: async (_, { id }, ctx) =&gt; {
+      return ctx.db.users.findById(id);
+    },
+    users: async (_, { limit, offset }, ctx) =&gt; {
+      return ctx.db.users.findAll({ limit, offset });
+    },
+  },
+
+  User: {
+    // Field-level resolver — runs for each User
+    posts: async (parent, _, ctx) =&gt; {
+      return ctx.db.posts.findByAuthor(parent.id);
+    },
+    fullName: (parent) =&gt; {
+      return `${parent.firstName} ${parent.lastName}`;
+    },
+  },
+
+  Post: {
+    author: async (parent, _, ctx) =&gt; {
+      return ctx.db.users.findById(parent.authorId);
+    },
+  },
+};</code></pre>
+    </div>
+    <div>
+      <div class="card amber">
+        <h3>The Four Arguments</h3>
+        <table>
+          <thead><tr><th>Arg</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><span class="a">parent</span></td><td>Result from the parent resolver</td></tr>
+            <tr><td><span class="g">args</span></td><td>Arguments passed to the field</td></tr>
+            <tr><td><span class="p">context</span></td><td>Shared per-request state (db, auth, loaders)</td></tr>
+            <tr><td><span class="b">info</span></td><td>AST of the query, field name, schema metadata</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card green" style="margin-top:.3em;">
+        <h3>Resolver Chain</h3>
+        <p>GraphQL executes resolvers <span class="a">top-down</span>. A <code>Query.user</code> resolver returns a User object, then each requested field on that User triggers its own resolver. The chain continues until all scalar leaves are resolved.</p>
+      </div>
+      <div class="card purple" style="margin-top:.3em;">
+        <h3>Default Resolver</h3>
+        <p>If no resolver is defined for a field, GraphQL reads <code>parent[fieldName]</code>. This is why returning plain objects with matching property names "just works".</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 10 — APOLLO SERVER ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">10</span><h2>Apollo Server with Express</h2></div>
+  <div class="cols cols-6040">
+    <div>
+<pre><code class="language-javascript">const express = require('express');
+const { ApolloServer } = require('@apollo/server');
+const {
+  expressMiddleware
+} = require('@apollo/server/express4');
+const cors = require('cors');
+
+const typeDefs = `#graphql
+  type Query {
+    hello: String!
+    users: [User!]!
+  }
+  type User {
+    id: ID!
+    name: String!
+    email: String!
+  }
+`;
+
+const resolvers = {
+  Query: {
+    hello: () =&gt; 'Hello, GraphQL!',
+    users: async (_, __, ctx) =&gt; ctx.db.users.findAll(),
+  },
+};
+
+async function startServer() {
+  const app = express();
+  const server = new ApolloServer({ typeDefs, resolvers });
+  await server.start();
+
+  app.use(
+    '/graphql',
+    cors(),
+    express.json(),
+    expressMiddleware(server, {
+      context: async ({ req }) =&gt; ({
+        db: require('./db'),
+        user: await authenticate(req),
+      }),
+    })
+  );
+
+  app.listen(4000, () =&gt;
+    console.log('GraphQL at http://localhost:4000/graphql')
+  );
+}
+
+startServer();</code></pre>
+    </div>
+    <div>
+      <div class="card amber">
+        <h3>Key Components</h3>
+        <ul>
+          <li><span class="a">typeDefs</span> &mdash; your SDL schema string or file</li>
+          <li><span class="g">resolvers</span> &mdash; map of type &rarr; field &rarr; function</li>
+          <li><span class="p">context</span> &mdash; built per-request, shared across resolvers</li>
+          <li><span class="b">expressMiddleware</span> &mdash; plugs Apollo into Express</li>
+        </ul>
+      </div>
+      <div class="card green" style="margin-top:.3em;">
+        <h3>Apollo Sandbox</h3>
+        <p>Apollo Server 4 ships with <span class="a">Apollo Sandbox</span> &mdash; an interactive IDE at your endpoint URL. Features: schema explorer, query history, response tracing, and documentation.</p>
+      </div>
+      <div class="card purple" style="margin-top:.3em;">
+        <h3>Context Best Practices</h3>
+        <ul>
+          <li>Create <span class="a">DataLoader instances</span> per request</li>
+          <li>Authenticate the user and attach to context</li>
+          <li>Pass database connections / pools</li>
+          <li>Never store mutable state between requests</li>
+        </ul>
+      </div>
+      <div class="card blue" style="margin-top:.3em;">
+        <h3>Alternatives</h3>
+        <ul>
+          <li><span class="a">Yoga</span> &mdash; by The Guild, spec-compliant</li>
+          <li><span class="g">Mercurius</span> &mdash; Fastify-native</li>
+          <li><span class="p">Pothos</span> &mdash; code-first schema builder</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 11 — APOLLO CLIENT ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">11</span><h2>Apollo Client</h2></div>
+  <p>Apollo Client is the most popular <span class="a">GraphQL client for React</span>. It provides hooks for queries and mutations, a normalised in-memory cache, and optimistic UI updates.</p>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber"><h3>Setup</h3></div>
+<pre><code class="language-javascript">import { ApolloClient, InMemoryCache, ApolloProvider }
+  from '@apollo/client';
+
+const client = new ApolloClient({
+  uri: 'http://localhost:4000/graphql',
+  cache: new InMemoryCache(),
+});
+
+// Wrap your app
+&lt;ApolloProvider client={client}&gt;
+  &lt;App /&gt;
+&lt;/ApolloProvider&gt;</code></pre>
+      <div class="card green" style="margin-top:.3em;"><h3>useQuery</h3></div>
+<pre><code class="language-javascript">import { useQuery, gql } from '@apollo/client';
+
+const GET_USERS = gql`
+  query GetUsers {
+    users { id name email }
+  }
+`;
+
+function UserList() {
+  const { loading, error, data } = useQuery(GET_USERS);
+
+  if (loading) return &lt;Spinner /&gt;;
+  if (error) return &lt;Error msg={error.message} /&gt;;
+
+  return data.users.map(u =&gt;
+    &lt;div key={u.id}&gt;{u.name}&lt;/div&gt;
+  );
+}</code></pre>
+    </div>
+    <div>
+      <div class="card purple"><h3>useMutation</h3></div>
+<pre><code class="language-javascript">const CREATE_USER = gql`
+  mutation CreateUser($input: CreateUserInput!) {
+    createUser(input: $input) { id name email }
+  }
+`;
+
+function CreateUserForm() {
+  const [createUser, { loading }] = useMutation(
+    CREATE_USER,
+    {
+      // Update cache after mutation
+      update(cache, { data: { createUser } }) {
+        cache.modify({
+          fields: {
+            users(existing = []) {
+              const newRef = cache.writeFragment({
+                data: createUser,
+                fragment: gql`fragment NewUser on User {
+                  id name email
+                }`,
+              });
+              return [...existing, newRef];
+            },
+          },
+        });
+      },
+    }
+  );
+}</code></pre>
+      <div class="card blue" style="margin-top:.3em;">
+        <h3>Optimistic Updates</h3>
+        <p>Pass <code>optimisticResponse</code> to <code>useMutation</code> to instantly reflect changes in the UI before the server responds. If the mutation fails, the cache rolls back automatically.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 12 — DATALOADERS ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">12</span><h2>DataLoaders &amp; the N+1 Problem</h2></div>
+  <div class="cols cols-6040">
+    <div>
+      <div class="card red">
+        <h3>The N+1 Problem</h3>
+        <p>Querying a list of 50 posts, each with an author, fires <span class="r">1 query for posts + 50 individual queries for authors = 51 queries</span>. This pattern kills database performance.</p>
+      </div>
+<pre><code class="language-graphql"># This innocent query causes N+1
+query {
+  posts {          # 1 query: SELECT * FROM posts
+    title
+    author {       # N queries: SELECT * FROM users WHERE id = ?
+      name         #            (one per post)
+    }
+  }
+}</code></pre>
+      <div class="card green" style="margin-top:.3em;">
+        <h3>The Solution: DataLoader</h3>
+        <p>Facebook's <code>dataloader</code> library <span class="a">batches</span> individual loads into a single query and <span class="g">caches</span> results within a request.</p>
+      </div>
+<pre><code class="language-bash">npm install dataloader</code></pre>
+    </div>
+    <div>
+<pre><code class="language-javascript">const DataLoader = require('dataloader');
+
+// Batch function: receives array of keys,
+// must return array of results in same order
+const userLoader = new DataLoader(async (ids) =&gt; {
+  // 1 query instead of N
+  const users = await db.query(
+    'SELECT * FROM users WHERE id = ANY($1)',
+    [ids]
+  );
+  // Map results to match input order
+  const userMap = new Map(users.map(u =&gt; [u.id, u]));
+  return ids.map(id =&gt; userMap.get(id) || null);
+});
+
+// In resolver
+const resolvers = {
+  Post: {
+    author: (post, _, ctx) =&gt;
+      ctx.loaders.user.load(post.authorId),
+  },
+};</code></pre>
+      <div class="card amber" style="margin-top:.3em;">
+        <h3>Critical Rules</h3>
+        <ul>
+          <li><span class="r">Create loaders per-request</span> &mdash; never share across requests (stale cache, auth leaks)</li>
+          <li>Batch function must return results in <span class="a">same order</span> as keys</li>
+          <li>DataLoader deduplicates &mdash; loading the same ID twice hits DB once</li>
+          <li>Use <code>{ cache: false }</code> to disable per-request caching if needed</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 13 — AUTH ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">13</span><h2>Authentication &amp; Authorisation</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber"><h3>Context-Based Auth</h3></div>
+<pre><code class="language-javascript">// Extract user from JWT in context factory
+const server = new ApolloServer({ typeDefs, resolvers });
+
+app.use('/graphql', expressMiddleware(server, {
+  context: async ({ req }) =&gt; {
+    const token = req.headers.authorization?.split(' ')[1];
+    let user = null;
+
+    if (token) {
+      try {
+        user = jwt.verify(token, process.env.JWT_SECRET);
+      } catch (e) {
+        // Token invalid or expired
+      }
+    }
+
+    return { user, db, loaders: createLoaders() };
+  },
+}));</code></pre>
+      <div class="card green" style="margin-top:.3em;"><h3>Resolver-Level Checks</h3></div>
+<pre><code class="language-javascript">const resolvers = {
+  Query: {
+    adminDashboard: (_, __, ctx) =&gt; {
+      if (!ctx.user) throw new GraphQLError(
+        'Not authenticated', {
+          extensions: { code: 'UNAUTHENTICATED' }
+        });
+      if (ctx.user.role !== 'ADMIN')
+        throw new GraphQLError(
+          'Not authorised', {
+            extensions: { code: 'FORBIDDEN' }
+          });
+      return ctx.db.dashboard.getStats();
+    },
+  },
+};</code></pre>
+    </div>
+    <div>
+      <div class="card purple"><h3>Directive-Based Auth</h3></div>
+<pre><code class="language-graphql"># Schema directives for declarative permissions
+directive @auth(requires: Role!) on FIELD_DEFINITION
+
+type Query {
+  publicPosts: [Post!]!
+  adminDashboard: Dashboard! @auth(requires: ADMIN)
+  myProfile: User! @auth(requires: VIEWER)
+}</code></pre>
+<pre><code class="language-javascript">// Directive transformer (Apollo Server 4)
+function authDirective(schema) {
+  return mapSchema(schema, {
+    [MapperKind.OBJECT_FIELD]: (fieldConfig) =&gt; {
+      const authDir = getDirective(schema, fieldConfig, 'auth');
+      if (authDir) {
+        const { requires } = authDir[0];
+        const { resolve = defaultFieldResolver } = fieldConfig;
+        fieldConfig.resolve = (parent, args, ctx, info) =&gt; {
+          if (!ctx.user) throw new GraphQLError('Unauthenticated');
+          if (ctx.user.role !== requires)
+            throw new GraphQLError('Forbidden');
+          return resolve(parent, args, ctx, info);
+        };
+      }
+      return fieldConfig;
+    },
+  });
+}</code></pre>
+      <div class="card blue" style="margin-top:.3em;">
+        <h3>Field-Level Permissions</h3>
+        <p>Hide sensitive fields (email, salary) based on the caller's role. Return <code>null</code> or throw for unauthorised field access &mdash; the rest of the query still resolves.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 14 — ERROR HANDLING ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">14</span><h2>Error Handling</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber">
+        <h3>GraphQL Error Format</h3>
+        <p>GraphQL always returns HTTP 200. Errors appear in the <code>errors</code> array alongside any partial <code>data</code>.</p>
+      </div>
+<pre><code class="language-json">{
+  "data": {
+    "user": {
+      "name": "Alice",
+      "secretField": null
+    }
+  },
+  "errors": [
+    {
+      "message": "Not authorised to view secretField",
+      "locations": [{ "line": 4, "column": 5 }],
+      "path": ["user", "secretField"],
+      "extensions": {
+        "code": "FORBIDDEN",
+        "http": { "status": 403 }
+      }
+    }
+  ]
+}</code></pre>
+      <div class="card green" style="margin-top:.3em;">
+        <h3>Partial Responses</h3>
+        <p>Unlike REST, a GraphQL response can include <span class="a">both data and errors</span>. Nullable fields resolve to <code>null</code> on error; non-null errors bubble up to the nearest nullable parent.</p>
+      </div>
+    </div>
+    <div>
+      <div class="card purple"><h3>Custom Error Classes</h3></div>
+<pre><code class="language-javascript">const { GraphQLError } = require('graphql');
+
+class NotFoundError extends GraphQLError {
+  constructor(resource, id) {
+    super(`${resource} ${id} not found`, {
+      extensions: {
+        code: 'NOT_FOUND',
+        http: { status: 404 },
+      },
+    });
+  }
+}
+
+class ValidationError extends GraphQLError {
+  constructor(fields) {
+    super('Validation failed', {
+      extensions: {
+        code: 'VALIDATION_ERROR',
+        fields,  // { email: 'Invalid format' }
+      },
+    });
+  }
+}
+
+// Usage in resolvers
+const user = await ctx.db.users.findById(id);
+if (!user) throw new NotFoundError('User', id);</code></pre>
+      <div class="card red" style="margin-top:.3em;">
+        <h3>Error Codes Convention</h3>
+        <ul>
+          <li><code>UNAUTHENTICATED</code> &mdash; no valid credentials</li>
+          <li><code>FORBIDDEN</code> &mdash; insufficient permissions</li>
+          <li><code>NOT_FOUND</code> &mdash; resource does not exist</li>
+          <li><code>VALIDATION_ERROR</code> &mdash; invalid input</li>
+          <li><code>INTERNAL_SERVER_ERROR</code> &mdash; unexpected failures</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 15 — PAGINATION ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">15</span><h2>Pagination</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber">
+        <h3>Offset Pagination (simple)</h3>
+      </div>
+<pre><code class="language-graphql">type Query {
+  posts(limit: Int = 10, offset: Int = 0): [Post!]!
+}
+
+# Usage: posts(limit: 10, offset: 20)
+# Problem: adding/removing items shifts pages</code></pre>
+      <div class="card green" style="margin-top:.3em;">
+        <h3>Cursor-Based Pagination (recommended)</h3>
+        <p>Uses an opaque cursor (encoded ID or timestamp) as a bookmark. Stable under insertions/deletions.</p>
+      </div>
+<pre><code class="language-graphql"># Relay Connection Specification
+type Query {
+  posts(
+    first: Int
+    after: String
+    last: Int
+    before: String
+  ): PostConnection!
+}
+
+type PostConnection {
+  edges: [PostEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type PostEdge {
+  node: Post!
+  cursor: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}</code></pre>
+    </div>
+    <div>
+      <div class="card purple"><h3>Resolver Implementation</h3></div>
+<pre><code class="language-javascript">const resolvers = {
+  Query: {
+    posts: async (_, { first = 10, after }, ctx) =&gt; {
+      const limit = Math.min(first, 100);  // cap
+      const cursor = after
+        ? Buffer.from(after, 'base64').toString()
+        : null;
+
+      const rows = await ctx.db.query(
+        `SELECT * FROM posts
+         ${cursor ? 'WHERE id > $2' : ''}
+         ORDER BY id ASC
+         LIMIT $1`,
+        cursor ? [limit + 1, cursor] : [limit + 1]
+      );
+
+      const hasNextPage = rows.length &gt; limit;
+      const edges = rows.slice(0, limit).map(row =&gt; ({
+        node: row,
+        cursor: Buffer.from(row.id.toString())
+                  .toString('base64'),
+      }));
+
+      return {
+        edges,
+        pageInfo: {
+          hasNextPage,
+          hasPreviousPage: !!after,
+          startCursor: edges[0]?.cursor,
+          endCursor: edges[edges.length - 1]?.cursor,
+        },
+        totalCount: await ctx.db.posts.count(),
+      };
+    },
+  },
+};</code></pre>
+      <div class="card blue" style="margin-top:.3em;">
+        <h3>Client Usage</h3>
+<pre><code class="language-javascript">const { data, fetchMore } = useQuery(GET_POSTS, {
+  variables: { first: 10 },
+});
+
+// Load next page
+fetchMore({
+  variables: { after: data.posts.pageInfo.endCursor },
+});</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 16 — SCHEMA DESIGN ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">16</span><h2>Schema Design Patterns</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber">
+        <h3>Interfaces</h3>
+        <p>Share fields across types. Useful when different types have a common base.</p>
+      </div>
+<pre><code class="language-graphql">interface Node {
+  id: ID!
+}
+
+interface Timestamped {
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type User implements Node &amp; Timestamped {
+  id: ID!
+  name: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Post implements Node &amp; Timestamped {
+  id: ID!
+  title: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}</code></pre>
+      <div class="card green" style="margin-top:.3em;">
+        <h3>Nullable vs Non-Null</h3>
+        <ul>
+          <li><span class="a">Non-null by default</span> for fields you always return</li>
+          <li><span class="g">Nullable</span> when data may not exist (optional relations)</li>
+          <li><span class="r">Caution:</span> non-null errors bubble up to the nearest nullable parent &mdash; too aggressive nullability can wipe entire responses</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card purple">
+        <h3>Union Types</h3>
+        <p>A field can return one of several unrelated types.</p>
+      </div>
+<pre><code class="language-graphql">union SearchResult = User | Post | Comment
+
+type Query {
+  search(term: String!): [SearchResult!]!
+}
+
+# Client uses inline fragments
+query {
+  search(term: "graphql") {
+    ... on User { name email }
+    ... on Post { title body }
+    ... on Comment { text author { name } }
+  }
+}</code></pre>
+      <div class="card blue" style="margin-top:.3em;">
+        <h3>Mutation Payload Pattern</h3>
+        <p>Return a dedicated payload type instead of the raw object.</p>
+      </div>
+<pre><code class="language-graphql">type CreateUserPayload {
+  user: User
+  errors: [UserError!]!
+}
+
+type UserError {
+  field: String!
+  message: String!
+}
+
+type Mutation {
+  createUser(input: CreateUserInput!): CreateUserPayload!
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 17 — PERFORMANCE ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">17</span><h2>Performance</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card red">
+        <h3>The Threat: Abusive Queries</h3>
+      </div>
+<pre><code class="language-graphql"># A malicious deeply-nested query
+query Evil {
+  user(id: "1") {
+    posts {
+      author {
+        posts {
+          author {
+            posts { title }  # 6 levels deep
+          }
+        }
+      }
+    }
+  }
+}</code></pre>
+      <div class="card amber" style="margin-top:.3em;">
+        <h3>Query Complexity Analysis</h3>
+        <p>Assign a cost to each field. Reject queries exceeding a threshold.</p>
+      </div>
+<pre><code class="language-javascript">const { createComplexityRule } = require(
+  'graphql-query-complexity'
+);
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  validationRules: [
+    createComplexityRule({
+      maximumComplexity: 1000,
+      estimators: [
+        fieldExtensionsEstimator(),
+        simpleEstimator({ defaultComplexity: 1 }),
+      ],
+    }),
+  ],
+});</code></pre>
+    </div>
+    <div>
+      <div class="card green"><h3>Depth Limiting</h3></div>
+<pre><code class="language-javascript">const depthLimit = require('graphql-depth-limit');
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  validationRules: [depthLimit(7)],
+});</code></pre>
+      <div class="card purple" style="margin-top:.3em;">
+        <h3>Persisted Queries</h3>
+        <p>Pre-register allowed queries at build time. The client sends a <span class="a">hash</span> instead of the full query string. Blocks arbitrary queries in production.</p>
+      </div>
+<pre><code class="language-javascript">// Client sends:
+{ "extensions": {
+    "persistedQuery": {
+      "sha256Hash": "abc123...",
+      "version": 1
+    }
+  },
+  "variables": { "id": "42" }
+}</code></pre>
+      <div class="card blue" style="margin-top:.3em;">
+        <h3>Caching Strategies</h3>
+        <ul>
+          <li><span class="a">CDN / HTTP cache</span> &mdash; use <code>@cacheControl</code> directive</li>
+          <li><span class="g">Response cache</span> &mdash; Apollo Server response cache plugin</li>
+          <li><span class="p">DataLoader</span> &mdash; per-request deduplication</li>
+          <li><span class="b">Redis</span> &mdash; shared cache across instances</li>
+          <li><span class="r">Apollo Client</span> &mdash; normalised in-memory cache</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 18 — TESTING ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">18</span><h2>Testing</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber"><h3>Mocking Resolvers</h3></div>
+<pre><code class="language-javascript">const { addMocksToSchema } = require(
+  '@graphql-tools/mock'
+);
+const { makeExecutableSchema } = require(
+  '@graphql-tools/schema'
+);
+
+const schema = makeExecutableSchema({ typeDefs });
+
+const mocks = {
+  User: () =&gt; ({
+    id: () =&gt; faker.string.uuid(),
+    name: () =&gt; faker.person.fullName(),
+    email: () =&gt; faker.internet.email(),
+  }),
+  DateTime: () =&gt; new Date().toISOString(),
+};
+
+const mockedSchema = addMocksToSchema({
+  schema,
+  mocks,
+});</code></pre>
+      <div class="card green" style="margin-top:.3em;">
+        <h3>Schema Validation</h3>
+<pre><code class="language-javascript">const { validateSchema, buildSchema } = require('graphql');
+
+test('schema is valid', () =&gt; {
+  const schema = buildSchema(typeDefs);
+  const errors = validateSchema(schema);
+  expect(errors).toHaveLength(0);
+});</code></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card purple"><h3>Integration Testing</h3></div>
+<pre><code class="language-javascript">const { ApolloServer } = require('@apollo/server');
+const assert = require('assert');
+
+describe('User queries', () =&gt; {
+  let server;
+
+  beforeAll(() =&gt; {
+    server = new ApolloServer({
+      typeDefs,
+      resolvers,
+    });
+  });
+
+  test('fetches user by ID', async () =&gt; {
+    const res = await server.executeOperation({
+      query: `query GetUser($id: ID!) {
+        user(id: $id) { id name email }
+      }`,
+      variables: { id: '42' },
+    }, {
+      contextValue: {
+        db: mockDb,
+        loaders: createLoaders(mockDb),
+      },
+    });
+
+    expect(res.body.singleResult.errors).toBeUndefined();
+    const user = res.body.singleResult.data.user;
+    expect(user.name).toBe('Alice');
+    expect(user.email).toBe('alice@example.com');
+  });
+
+  test('returns error for missing user', async () =&gt; {
+    const res = await server.executeOperation({
+      query: `query { user(id: "999") { id name } }`,
+    }, { contextValue: { db: mockDb, loaders: createLoaders(mockDb) } });
+
+    expect(res.body.singleResult.errors).toBeDefined();
+    expect(res.body.singleResult.errors[0]
+      .extensions.code).toBe('NOT_FOUND');
+  });
+});</code></pre>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 19 — SUMMARY ═══════════════════════════════ -->
+<section>
+  <div class="slide-hdr"><span class="tag">19</span><h2>Summary &amp; Next Steps</h2></div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber">
+        <h3>Key Takeaways</h3>
+        <ul>
+          <li>GraphQL = typed schema + declarative data fetching</li>
+          <li>Single endpoint eliminates over/under-fetching</li>
+          <li>SDL is the contract &mdash; schema-first design</li>
+          <li>Resolvers map fields to data sources</li>
+          <li>DataLoader solves the N+1 problem via batching</li>
+          <li>Apollo Server + Client is the dominant ecosystem</li>
+          <li>Cursor-based pagination with Relay Connection spec</li>
+          <li>Protect with depth limiting, complexity analysis, persisted queries</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card green">
+        <h3>Recommended Reading</h3>
+        <ul>
+          <li><span class="a">graphql.org</span> &mdash; official specification and docs</li>
+          <li><span class="g">apollographql.com/docs</span> &mdash; Apollo Server &amp; Client</li>
+          <li><span class="p">Production Ready GraphQL</span> &mdash; Marc-Andr&eacute; Giroux</li>
+          <li><span class="b">Learning GraphQL</span> &mdash; Eve Porcello &amp; Alex Banks</li>
+        </ul>
+      </div>
+      <div class="card purple" style="margin-top:.3em;">
+        <h3>Try These</h3>
+        <ul>
+          <li>Build a full-stack app with Apollo Server + React</li>
+          <li>Add real-time features with subscriptions</li>
+          <li>Implement cursor pagination with a real database</li>
+          <li>Set up schema federation across microservices</li>
+          <li>Explore code-first schemas with Pothos or Nexus</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <p style="text-align:center; margin-top:.5em; color:var(--muted); font-size:.5em;">
+    <span class="a">Thank you!</span> &mdash; Built with Reveal.js &middot; Single self-contained HTML file
+  </p>
+</section>
+
+
+</div><!-- /slides -->
+</div><!-- /reveal -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/highlight/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/highlight/monokai.min.css">
+<script>
+Reveal.initialize({
+  hash: true,
+  transition: 'fade',
+  transitionSpeed: 'fast',
+  controls: true,
+  progress: true,
+  center: false,
+  width: 1100,
+  height: 900,
+  margin: 0.01,
+  plugins: [RevealHighlight],
+  highlight: { theme: 'monokai' }
+});
+</script>
+<script>
+(function(){
+  var h = Reveal.getConfig().height || 900;
+  var m = Reveal.getConfig().margin || 0.02;
+  var maxH = Math.floor(h * (1 - 2 * m)) + 'px';
+  function fixSlides(){
+    document.querySelectorAll('.reveal .slides>section,.reveal .slides>section>section').forEach(function(s){
+      s.style.display = 'block';
+      s.style.maxHeight = maxH;
+    });
+  }
+  Reveal.on('ready', fixSlides);
+  Reveal.on('slidechanged', fixSlides);
+})();
+</script>
+</body>
+</html>
